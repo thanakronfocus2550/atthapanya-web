@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #FACC15;
+  --color-primary-dark: #EAB308;
+  --color-primary-light: #FDE68A;
+  --color-surface: #F9FAFB;
+  --color-surface-dark: #F3F4F6;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-border: #E5E7EB;
+  --color-gold: #D4A017;
+  --color-gold-light: #F5D860;
+  --color-success: #22C55E;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+  --color-admin-bg: #1F2937;
+  --color-admin-surface: #374151;
+  --color-admin-text: #F9FAFB;
+  --font-sans: "Kanit", sans-serif;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #FFFFFF;
+  color: var(--color-text-primary);
+  font-family: "Kanit", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode */
+html.dark body {
+  background: #0F172A;
+  color: #E2E8F0;
+}
+
+html.dark .glass {
+  background: rgba(15, 23, 42, 0.88);
+}
+
+html.dark .bg-white {
+  background-color: #1E293B;
+}
+
+html.dark .bg-surface {
+  background-color: #1E293B;
+}
+
+html.dark .bg-surface-dark {
+  background-color: #334155;
+}
+
+html.dark .border-border {
+  border-color: #334155;
+}
+
+html.dark .text-text-primary {
+  color: #F1F5F9;
+}
+
+html.dark .text-text-secondary {
+  color: #94A3B8;
+}
+
+html.dark .text-text-muted {
+  color: #64748B;
+}
+
+html.dark .bg-primary\/15 {
+  background-color: rgba(250, 204, 21, 0.15);
+}
+
+html.dark footer {
+  background-color: #020617 !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
