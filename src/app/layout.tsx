@@ -5,6 +5,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { CartProvider } from "@/components/CartProvider";
+import { SiteDataProvider } from "@/components/SiteDataProvider";
+import MetadataUpdater from "@/components/MetadataUpdater";
+import AdminShortcut from "@/components/AdminShortcut";
+
 
 const kanit = Kanit({
   subsets: ["thai", "latin"],
@@ -27,13 +31,17 @@ export default function RootLayout({
   return (
     <html lang="th" suppressHydrationWarning>
       <body className={`${kanit.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          <CartProvider>
-            <Navbar />
-            <main className="min-h-screen">{children}</main>
-            <Footer />
-          </CartProvider>
-        </ThemeProvider>
+        <SiteDataProvider>
+          <MetadataUpdater />
+          <AdminShortcut />
+          <ThemeProvider>
+            <CartProvider>
+              <Navbar />
+              <main className="min-h-screen">{children}</main>
+              <Footer />
+            </CartProvider>
+          </ThemeProvider>
+        </SiteDataProvider>
       </body>
     </html>
   );

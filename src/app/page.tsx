@@ -2,13 +2,15 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Trophy, TrendingUp, Users, Star, GraduationCap, ChevronLeft, ChevronRight, MessageCircle, Quote } from 'lucide-react';
+import { ArrowRight, Sparkles, Trophy, TrendingUp, Users, Star, GraduationCap, ChevronLeft, ChevronRight, MessageCircle, Quote, Bell } from 'lucide-react';
 import Link from 'next/link';
 import ScrollReveal from '@/components/ScrollReveal';
 import CourseCard from '@/components/CourseCard';
 import PageTransition from '@/components/PageTransition';
-import { courses, hallOfFame, tutors, testimonials } from '@/lib/data';
+import { useSiteData } from '@/components/SiteDataProvider';
+import { tutors, testimonials } from '@/lib/data';
 import type { CourseCategory } from '@/types';
+import AnnouncementPopup from '@/components/AnnouncementPopup';
 
 const categories: { label: string; value: CourseCategory | 'all' }[] = [
   { label: 'ทั้งหมด', value: 'all' },
@@ -33,6 +35,9 @@ const heroQuotes = [
 ];
 
 export default function HomePage() {
+  const { data } = useSiteData();
+  const { courses = [], hallOfFame = [], settings } = data;
+
   const [activeCategory, setActiveCategory] = useState<CourseCategory | 'all'>('all');
   const [heroIndex, setHeroIndex] = useState(0);
 
@@ -52,11 +57,11 @@ export default function HomePage() {
   return (
     <PageTransition>
       {/* ─── Hero Section ─── */}
-      <section className="relative overflow-hidden min-h-[520px] lg:min-h-[580px]" style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 40%, #B45309 100%)' }}>
+      <section className="relative overflow-hidden min-h-[520px] lg:min-h-[580px]" style={{ background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 40%, #000 100%)' }}>
         {/* Background decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-yellow-300/10 rounded-full blur-3xl translate-y-1/2" />
+          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-primary/10 rounded-full blur-3xl translate-y-1/2" />
           {/* Subtle grid pattern */}
           <div className="absolute inset-0 opacity-[0.03]" style={{
             backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
@@ -101,7 +106,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white text-amber-700 px-5 py-2 rounded-full shadow-lg font-semibold text-sm whitespace-nowrap"
+                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white text-primary-dark px-5 py-2 rounded-full shadow-lg font-semibold text-sm whitespace-nowrap"
                 >
                   {tutors[heroIndex]?.name}
                 </motion.div>
@@ -119,11 +124,10 @@ export default function HomePage() {
               {/* Quote */}
               <div className="mb-6">
                 <p className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight drop-shadow-md">
-                  &ldquo;{heroQuotes[heroIndex % heroQuotes.length].line1}
-                  <br />
-                  {heroQuotes[heroIndex % heroQuotes.length].line2}
-                  <br />
-                  {heroQuotes[heroIndex % heroQuotes.length].line3}&rdquo;
+                  &ldquo;{settings.heroTitle}&rdquo;
+                </p>
+                <p className="mt-4 text-lg text-white/90 drop-shadow-sm">
+                  {settings.heroSubtitle}
                 </p>
               </div>
 
@@ -138,7 +142,7 @@ export default function HomePage() {
                   href="/courses"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary-dark text-gray-900 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-primary/30 text-base"
                 >
-                  ทดลองเรียนฟรี
+                  {settings.heroCtaText || 'ดูคอร์สระเรียนทั้งหมด'}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
@@ -242,6 +246,39 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Announcements Section ─── */}
+      {data.announcements?.some(a => a.active) && (
+        <section className="py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Bell className="w-5 h-5 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-text-primary">ข่าวสารและประกาศ</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {data.announcements.filter(a => a.active).slice(0, 3).map((ann) => (
+                <ScrollReveal key={ann.id}>
+                  <div className="h-full p-6 rounded-2xl border-2 border-surface hover:border-primary/30 bg-surface/30 transition-all group">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${ann.category === 'URGENT' ? 'bg-red-500 text-white' :
+                        ann.category === 'NEW' ? 'bg-green-500 text-white' :
+                          'bg-primary text-text-primary'
+                        }`}>
+                        {ann.category === 'URGENT' ? 'IMPORTANT' : ann.category === 'NEW' ? 'NEW COURSE' : 'UPDATE'}
+                      </span>
+                      <span className="text-xs text-text-muted">{ann.date}</span>
+                    </div>
+                    <h3 className="font-bold text-text-primary mb-2 group-hover:text-primary-dark transition-colors">{ann.title}</h3>
+                    <p className="text-sm text-text-secondary line-clamp-2">{ann.content}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── Course Filter Tabs ─── */}
       <section className="py-16 lg:py-20 bg-white">
@@ -453,6 +490,7 @@ export default function HomePage() {
           </ScrollReveal>
         </div>
       </section>
+      <AnnouncementPopup />
     </PageTransition>
   );
 }

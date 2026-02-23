@@ -10,22 +10,28 @@ import {
 } from 'lucide-react';
 import PageTransition from '@/components/PageTransition';
 import ScrollReveal from '@/components/ScrollReveal';
-import { courses, lessons } from '@/lib/data';
+import { useSiteData } from '@/components/SiteDataProvider';
 import { formatPrice } from '@/lib/utils';
 import { useCart } from '@/components/CartProvider';
 
 export default function CourseDetailPage() {
     const params = useParams();
-    const course = courses.find((c) => c.id === params.id);
-    const courseLessons = lessons.filter((l) => l.courseId === params.id);
+    const { data, enrollInCourse } = useSiteData();
+    const { courses = [], lessons = [], enrolledCourseIds = [] } = data;
+
+    const id = params.id as string;
+    const course = courses.find((c) => c.id === id);
+    const courseLessons = lessons.filter((l) => l.courseId === id);
+
     const [openAccordion, setOpenAccordion] = useState<string | null>(courseLessons[0]?.id || null);
     const { addItem, isInCart, removeItem } = useCart();
     const [justAdded, setJustAdded] = useState(false);
 
     const inCart = course ? isInCart(course.id) : false;
+    const isEnrolled = course ? enrolledCourseIds.includes(course.id) : false;
 
     const handleAddToCart = () => {
-        if (!course || inCart) return;
+        if (!course || inCart || isEnrolled) return;
         addItem(course);
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 2000);
@@ -100,16 +106,52 @@ export default function CourseDetailPage() {
                         {/* Tutor Info */}
                         <ScrollReveal>
                             <div className="bg-white rounded-2xl border border-border p-6 mb-6">
-                                <h3 className="font-semibold text-text-primary mb-3">ผู้สอน</h3>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-primary/15 rounded-full flex items-center justify-center text-lg font-bold text-primary-dark">
-                                        {course.tutorName.charAt(0)}
+                                <h3 className="font-semibold text-text-primary mb-4">ผู้สอน</h3>
+                                {data.tutors?.find(t => t.name === course.tutorName) ? (() => {
+                                    const tutor = data.tutors.find(t => t.name === course.tutorName)!;
+                                    return (
+                                        <div className="flex flex-col sm:flex-row gap-6">
+                                            <div className="w-20 h-20 bg-surface rounded-2xl overflow-hidden shrink-0 border border-border">
+                                                {tutor.avatar ? (
+                                                    <img src={tutor.avatar} alt={tutor.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-primary-dark bg-primary/10">
+                                                        {tutor.name.charAt(0)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                    <h4 className="font-bold text-text-primary text-lg">{tutor.name}</h4>
+                                                    {tutor.expertise.map(exp => (
+                                                        <span key={exp} className="px-2 py-0.5 bg-primary/10 text-primary-dark text-[10px] font-bold rounded-full">
+                                                            {exp}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <p className="text-sm text-text-secondary leading-relaxed mb-4">
+                                                    {tutor.bio}
+                                                </p>
+                                                {tutor.links && (
+                                                    <div className="flex gap-4 text-xs font-semibold text-primary-dark">
+                                                        {tutor.links.facebook && <a href={tutor.links.facebook} className="hover:underline">Facebook</a>}
+                                                        {tutor.links.line && <span className="text-text-muted">Line: {tutor.links.line}</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })() : (
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-primary/15 rounded-full flex items-center justify-center text-lg font-bold text-primary-dark">
+                                            {course.tutorName.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-text-primary">{course.tutorName}</p>
+                                            <p className="text-sm text-text-secondary">อาจารย์ประจำสถาบันอรรถปัญญา</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-medium text-text-primary">{course.tutorName}</p>
-                                        <p className="text-sm text-text-secondary">อาจารย์ประจำสถาบันอรรถปัญญา</p>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </ScrollReveal>
 
@@ -124,46 +166,69 @@ export default function CourseDetailPage() {
                                 <div className="divide-y divide-border">
                                     {courseLessons.map((lesson, i) => (
                                         <div key={lesson.id}>
-                                            <button
-                                                onClick={() =>
-                                                    setOpenAccordion(openAccordion === lesson.id ? null : lesson.id)
-                                                }
-                                                className="w-full flex items-center justify-between px-6 py-4 hover:bg-surface/50 transition-colors text-left"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <span className="w-7 h-7 bg-surface rounded-full flex items-center justify-center text-xs font-medium text-text-secondary">
-                                                        {i + 1}
-                                                    </span>
-                                                    <span className="text-sm font-medium text-text-primary">
-                                                        {lesson.title}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs text-text-muted">{lesson.duration} นาที</span>
-                                                    <ChevronDown
-                                                        className={`w-4 h-4 text-text-muted transition-transform ${openAccordion === lesson.id ? 'rotate-180' : ''
-                                                            }`}
-                                                    />
-                                                </div>
-                                            </button>
-                                            {openAccordion === lesson.id && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="px-6 pb-4"
+                                            {isEnrolled ? (
+                                                <Link
+                                                    href={`/classroom/${course.id}?lessonId=${lesson.id}`}
+                                                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-surface/50 transition-colors text-left group"
                                                 >
-                                                    <div className="pl-10 flex items-center gap-4 text-sm text-text-secondary">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <PlayCircle className="w-4 h-4 text-primary-dark" />
-                                                            วิดีโอ {lesson.duration} นาที
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="w-7 h-7 bg-surface group-hover:bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-text-secondary group-hover:text-primary-dark transition-colors">
+                                                            {i + 1}
                                                         </span>
-                                                        <span className="flex items-center gap-1.5">
-                                                            <CheckCircle className="w-4 h-4 text-text-muted" />
-                                                            ยังไม่ได้เรียน
+                                                        <span className="text-sm font-semibold text-text-primary group-hover:text-primary-dark transition-colors">
+                                                            {lesson.title}
                                                         </span>
+                                                        <PlayCircle className="w-4 h-4 text-primary-dark opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
-                                                </motion.div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-xs text-text-muted">{lesson.duration} นาที</span>
+                                                        <ChevronDown className="w-4 h-4 text-text-muted opacity-0" />
+                                                    </div>
+                                                </Link>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() =>
+                                                            setOpenAccordion(openAccordion === lesson.id ? null : lesson.id)
+                                                        }
+                                                        className="w-full flex items-center justify-between px-6 py-4 hover:bg-surface/50 transition-colors text-left"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="w-7 h-7 bg-surface rounded-full flex items-center justify-center text-xs font-medium text-text-secondary">
+                                                                {i + 1}
+                                                            </span>
+                                                            <span className="text-sm font-medium text-text-primary">
+                                                                {lesson.title}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-xs text-text-muted">{lesson.duration} นาที</span>
+                                                            <ChevronDown
+                                                                className={`w-4 h-4 text-text-muted transition-transform ${openAccordion === lesson.id ? 'rotate-180' : ''
+                                                                    }`}
+                                                            />
+                                                        </div>
+                                                    </button>
+                                                    {openAccordion === lesson.id && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            className="px-6 pb-4"
+                                                        >
+                                                            <div className="pl-10 flex items-center gap-4 text-sm text-text-secondary">
+                                                                <span className="flex items-center gap-1.5">
+                                                                    <PlayCircle className="w-4 h-4 text-primary-dark" />
+                                                                    วิดีโอ {lesson.duration} นาที
+                                                                </span>
+                                                                <span className="flex items-center gap-1.5">
+                                                                    <CheckCircle className="w-4 h-4 text-text-muted" />
+                                                                    ยังไม่ได้เรียน
+                                                                </span>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     ))}
@@ -189,8 +254,16 @@ export default function CourseDetailPage() {
                                     <p className="text-sm text-text-muted mt-1">ราคาต่อคอร์ส</p>
                                 </div>
 
-                                {/* Add to Cart / In Cart */}
-                                {inCart ? (
+                                {/* Add to Cart / In Cart / Enroll */}
+                                {isEnrolled ? (
+                                    <Link
+                                        href={`/classroom/${course.id}`}
+                                        className="flex items-center justify-center gap-2 w-full py-3.5 bg-primary-dark hover:bg-black text-white font-semibold rounded-xl transition-all shadow-lg shadow-black/10 mb-3"
+                                    >
+                                        <PlayCircle className="w-5 h-5" />
+                                        เข้าสู่ห้องเรียน
+                                    </Link>
+                                ) : inCart ? (
                                     <div className="space-y-2 mb-3">
                                         <div className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-50 text-green-700 font-semibold rounded-xl border border-green-200">
                                             <Check className="w-5 h-5" />

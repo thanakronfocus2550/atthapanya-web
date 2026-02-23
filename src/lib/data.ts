@@ -16,7 +16,7 @@ export const courses: Course[] = [
         description:
             'คอร์สเตรียมสอบ A-Level คณิตศาสตร์แบบครบเนื้อหา ตั้งแต่พีชคณิต แคลคูลัส ความน่าจะเป็น พร้อมเทคนิคทำโจทย์ให้เร็ว',
         price: 3500,
-        thumbnail: '/thumbnails/math-alevel.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.สมชาย ปัญญาดี',
         category: 'A-Level',
         subject: 'คณิตศาสตร์',
@@ -32,7 +32,7 @@ export const courses: Course[] = [
         description:
             'ฟิสิกส์ A-Level ครบทุกบท กลศาสตร์ คลื่น ไฟฟ้า อะตอม พร้อมสรุปสูตรและเทคนิคการทำโจทย์',
         price: 3200,
-        thumbnail: '/thumbnails/physics-alevel.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.วิทยา แสงทอง',
         category: 'A-Level',
         subject: 'ฟิสิกส์',
@@ -48,7 +48,7 @@ export const courses: Course[] = [
         description:
             'เตรียมสอบ TGAT ภาษาอังกฤษ ทั้ง Reading, Grammar, Vocabulary พร้อมเทคนิคเก็บคะแนนเต็ม',
         price: 2800,
-        thumbnail: '/thumbnails/tgat-eng.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1543165796-5426273eaab3?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.แพรวา ภาษาเด่น',
         category: 'TGAT',
         subject: 'ภาษาอังกฤษ',
@@ -64,7 +64,7 @@ export const courses: Course[] = [
         description:
             'คอร์สเคมี A-Level เรียนรู้ตั้งแต่โครงสร้างอะตอม พันธะเคมี สมดุลเคมี กรด-เบส จนถึงเคมีอินทรีย์',
         price: 3000,
-        thumbnail: '/thumbnails/chem-alevel.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1532187875605-2fe358a71e68?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.ณัฐพล เคมีเทพ',
         category: 'A-Level',
         subject: 'เคมี',
@@ -80,7 +80,7 @@ export const courses: Course[] = [
         description:
             'เสริมพื้นฐานคณิตศาสตร์ ม.1-3 จำนวนเต็ม เศษส่วน สมการ เรขาคณิต สถิติ อย่างเข้าใจง่าย',
         price: 2000,
-        thumbnail: '/thumbnails/math-junior.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1596495573105-d14658ca9b5d?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.สมชาย ปัญญาดี',
         category: 'ม.ต้น',
         subject: 'คณิตศาสตร์',
@@ -96,7 +96,7 @@ export const courses: Course[] = [
         description:
             'พิชิตข้อสอบ TGAT ส่วนการคิดอย่างมีเหตุผล ฝึกวิเคราะห์ตรรกะ แก้ปัญหาเชิงตัวเลขและภาษา',
         price: 2500,
-        thumbnail: '/thumbnails/tgat-logic.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.ปรีชา ตรรกะเทพ',
         category: 'TGAT',
         subject: 'คณิตศาสตร์',
@@ -112,7 +112,7 @@ export const courses: Course[] = [
         description:
             'ชีววิทยา A-Level สรุปเนื้อหาครบทุกบท เซลล์ พันธุศาสตร์ นิเวศวิทยา วิวัฒนาการ พร้อมโจทย์ฝึก',
         price: 2800,
-        thumbnail: '/thumbnails/bio-alevel.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.ธนิดา ชีวะเก่ง',
         category: 'A-Level',
         subject: 'ชีววิทยา',
@@ -128,7 +128,7 @@ export const courses: Course[] = [
         description:
             'เรียนภาษาอังกฤษ ม.ต้น แบบเน้นใช้จริง Grammar, Conversation, Reading Comprehension',
         price: 1800,
-        thumbnail: '/thumbnails/eng-junior.jpg',
+        thumbnail: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=800',
         tutorName: 'อ.แพรวา ภาษาเด่น',
         category: 'ม.ต้น',
         subject: 'ภาษาอังกฤษ',

@@ -1,246 +1,294 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, Trophy, ImageIcon } from 'lucide-react';
-import { hallOfFame as initialData } from '@/lib/data';
-import type { HallOfFameEntry } from '@/types';
+import { useSiteData } from '@/components/SiteDataProvider';
+import { HallOfFameEntry } from '@/types';
+import { Plus, Trash2, Edit2, Save, X, Trophy, GraduationCap, School } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
 
 export default function AdminHallOfFamePage() {
-    const [entries, setEntries] = useState(initialData);
+    const { data, updateHallOfFame } = useSiteData();
+    const [entries, setEntries] = useState<HallOfFameEntry[]>(data.hallOfFame || []);
     const [showModal, setShowModal] = useState(false);
-    const [editing, setEditing] = useState<HallOfFameEntry | null>(null);
-    const [form, setForm] = useState({
-        name: '', score: '', maxScore: '100', subject: 'คณิตศาสตร์',
-        exam: 'A-Level', year: '2568', image: '', university: '',
+    const [editingEntry, setEditingEntry] = useState<HallOfFameEntry | null>(null);
+    const [form, setForm] = useState<Partial<HallOfFameEntry>>({
+        name: '', score: 0, maxScore: 100, subject: '', exam: '', year: '2568', university: ''
     });
 
     const openAdd = () => {
-        setEditing(null);
-        setForm({ name: '', score: '', maxScore: '100', subject: 'คณิตศาสตร์', exam: 'A-Level', year: '2568', image: '', university: '' });
+        setEditingEntry(null);
+        setForm({ name: '', score: 0, maxScore: 100, subject: '', exam: '', year: '2568', university: '' });
         setShowModal(true);
     };
 
-    const openEdit = (e: HallOfFameEntry) => {
-        setEditing(e);
-        setForm({
-            name: e.name, score: e.score.toString(), maxScore: e.maxScore.toString(),
-            subject: e.subject, exam: e.exam, year: e.year,
-            image: e.image || '', university: e.university || '',
-        });
+    const openEdit = (entry: HallOfFameEntry) => {
+        setEditingEntry(entry);
+        setForm(entry);
         setShowModal(true);
     };
 
     const handleSave = () => {
-        const data: HallOfFameEntry = {
-            id: editing?.id || Date.now().toString(),
-            name: form.name,
-            score: Number(form.score),
-            maxScore: Number(form.maxScore),
-            subject: form.subject,
-            exam: form.exam,
-            year: form.year,
-            image: form.image || undefined,
-            university: form.university || undefined,
-        };
-        if (editing) {
-            setEntries(entries.map(e => e.id === editing.id ? data : e));
+        if (!form.name || !form.subject) return;
+
+        let updated: HallOfFameEntry[];
+        if (editingEntry) {
+            updated = entries.map(e => e.id === editingEntry.id ? { ...e, ...form } as HallOfFameEntry : e);
         } else {
-            setEntries([...entries, data]);
+            const newEntry: HallOfFameEntry = {
+                id: Date.now().toString(),
+                ...form
+            } as HallOfFameEntry;
+            updated = [...entries, newEntry];
         }
+
+        setEntries(updated);
+        updateHallOfFame(updated);
         setShowModal(false);
     };
 
     const handleDelete = (id: string) => {
-        if (confirm('ต้องการลบผลงานนี้หรือไม่?')) {
-            setEntries(entries.filter(e => e.id !== id));
+        if (confirm('ยืนยันการลบผลงานนักเรียน?')) {
+            const updated = entries.filter(e => e.id !== id);
+            setEntries(updated);
+            updateHallOfFame(updated);
         }
     };
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-text-primary">ผลงานนักเรียนรุ่นพี่</h1>
-                <button
-                    onClick={openAdd}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-text-primary font-medium text-sm rounded-xl transition-all"
-                >
-                    <Plus className="w-4 h-4" />
-                    เพิ่มผลงาน
-                </button>
-            </div>
-
-            {/* Table */}
-            <div className="bg-white rounded-2xl border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-surface border-b border-border">
-                                <th className="text-left px-5 py-3 font-medium text-text-secondary">นักเรียน</th>
-                                <th className="text-center px-5 py-3 font-medium text-text-secondary">คะแนน</th>
-                                <th className="text-left px-5 py-3 font-medium text-text-secondary hidden md:table-cell">วิชา</th>
-                                <th className="text-left px-5 py-3 font-medium text-text-secondary hidden sm:table-cell">สอบ</th>
-                                <th className="text-center px-5 py-3 font-medium text-text-secondary hidden lg:table-cell">ปี</th>
-                                <th className="text-center px-5 py-3 font-medium text-text-secondary">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {entries.map((entry) => {
-                                const avatarUrl = entry.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.name)}&size=80&background=FACC15&color=fff&bold=true`;
-                                return (
-                                    <tr key={entry.id} className="hover:bg-surface/50 transition-colors">
-                                        <td className="px-5 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <img src={avatarUrl} alt={entry.name}
-                                                    className="w-10 h-10 rounded-full object-cover ring-2 ring-border shrink-0" />
-                                                <div>
-                                                    <p className="font-medium text-text-primary">{entry.name}</p>
-                                                    {entry.university && (
-                                                        <p className="text-xs text-text-muted">{entry.university}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-5 py-4 text-center">
-                                            <span className="text-lg font-bold text-gold">{entry.score}</span>
-                                            <span className="text-xs text-text-muted">/{entry.maxScore}</span>
-                                        </td>
-                                        <td className="px-5 py-4 text-text-secondary hidden md:table-cell">{entry.subject}</td>
-                                        <td className="px-5 py-4 hidden sm:table-cell">
-                                            <span className="px-2.5 py-1 bg-primary/10 text-primary-dark text-xs rounded-full">{entry.exam}</span>
-                                        </td>
-                                        <td className="px-5 py-4 text-center text-text-secondary hidden lg:table-cell">{entry.year}</td>
-                                        <td className="px-5 py-4">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <button onClick={() => openEdit(entry)}
-                                                    className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 transition-colors" title="แก้ไข">
-                                                    <Pencil className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => handleDelete(entry.id)}
-                                                    className="p-1.5 rounded-lg hover:bg-red-50 text-danger transition-colors" title="ลบ">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} />
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="relative bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+        <PageTransition>
+            <div className="space-y-10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-yellow-400/10 rounded-2xl flex items-center justify-center text-yellow-600 shadow-inner">
+                            <Trophy className="w-8 h-8" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black text-text-primary mb-1">จัดการผลงานนักเรียน</h1>
+                            <p className="text-text-secondary text-sm font-medium">เพิ่มรายชื่อนักเรียนที่สอบติดหรือทำคะแนนสูงสุดเพื่อสร้างแรงบันดาลใจ</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={openAdd}
+                        className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-text-primary font-black text-sm rounded-2xl transition-all shadow-lg shadow-primary/20 active:scale-95"
                     >
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold text-text-primary">
-                                {editing ? 'แก้ไขผลงาน' : 'เพิ่มผลงานใหม่'}
-                            </h2>
-                            <button onClick={() => setShowModal(false)} className="text-text-muted hover:text-text-primary">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Image */}
-                            <div>
-                                <label className="block text-sm font-medium text-text-primary mb-1">รูปนักเรียน (URL)</label>
-                                <input type="url" value={form.image}
-                                    onChange={(e) => setForm({ ...form, image: e.target.value })}
-                                    placeholder="https://example.com/student-photo.jpg"
-                                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                {form.image && (
-                                    <div className="mt-2 flex justify-center">
-                                        <img src={form.image} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-border"
-                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                    </div>
-                                )}
-                                {!form.image && (
-                                    <p className="text-xs text-text-muted mt-1 flex items-center gap-1">
-                                        <ImageIcon className="w-3.5 h-3.5" />
-                                        ถ้าไม่ใส่รูป จะสร้างจากชื่อแทน
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">ชื่อ-นามสกุล</label>
-                                    <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">มหาวิทยาลัย (ถ้ามี)</label>
-                                    <input type="text" value={form.university} onChange={(e) => setForm({ ...form, university: e.target.value })}
-                                        placeholder="จุฬาลงกรณ์มหาวิทยาลัย"
-                                        className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">คะแนนที่ได้</label>
-                                    <input type="number" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">คะแนนเต็ม</label>
-                                    <input type="number" value={form.maxScore} onChange={(e) => setForm({ ...form, maxScore: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">วิชา</label>
-                                    <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
-                                        <option value="คณิตศาสตร์">คณิตศาสตร์</option>
-                                        <option value="ฟิสิกส์">ฟิสิกส์</option>
-                                        <option value="เคมี">เคมี</option>
-                                        <option value="ชีววิทยา">ชีววิทยา</option>
-                                        <option value="ภาษาอังกฤษ">ภาษาอังกฤษ</option>
-                                        <option value="ภาษาไทย">ภาษาไทย</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">การสอบ</label>
-                                    <select value={form.exam} onChange={(e) => setForm({ ...form, exam: e.target.value })}
-                                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
-                                        <option value="A-Level">A-Level</option>
-                                        <option value="TGAT">TGAT</option>
-                                        <option value="GAT">GAT</option>
-                                        <option value="PAT">PAT</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">ปี</label>
-                                    <input type="text" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })}
-                                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowModal(false)}
-                                className="flex-1 py-2.5 border border-border text-text-secondary rounded-xl hover:bg-surface-dark transition-colors text-sm">
-                                ยกเลิก
-                            </button>
-                            <button onClick={handleSave}
-                                className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-text-primary font-medium rounded-xl transition-all text-sm">
-                                {editing ? 'บันทึก' : 'เพิ่มผลงาน'}
-                            </button>
-                        </div>
-                    </motion.div>
+                        <Plus className="w-5 h-5" />
+                        เพิ่มผลงานใหม่
+                    </button>
                 </div>
-            )}
-        </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {entries.map((entry, i) => (
+                        <motion.div
+                            key={entry.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="bg-white rounded-[32px] border border-border overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-primary/5 transition-all duration-500"
+                        >
+                            <div className="p-8 pb-4">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="w-14 h-14 bg-surface-dark rounded-2xl flex items-center justify-center font-black text-xl text-text-muted border border-border group-hover:bg-white transition-colors duration-500">
+                                        {entry.name.charAt(0)}
+                                    </div>
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                        <button
+                                            onClick={() => openEdit(entry)}
+                                            className="p-3 bg-surface-dark hover:bg-primary hover:text-text-primary rounded-2xl text-text-secondary transition-all active:scale-90"
+                                        >
+                                            <Edit2 className="w-4.5 h-4.5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(entry.id)}
+                                            className="p-3 bg-danger/5 hover:bg-danger hover:text-white rounded-2xl text-danger transition-all active:scale-90"
+                                        >
+                                            <Trash2 className="w-4.5 h-4.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-black text-text-primary mb-4 group-hover:text-primary-dark transition-colors">{entry.name}</h3>
+                                <div className="space-y-4 mb-6">
+                                    <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
+                                        <div className="w-8 h-8 bg-surface-dark rounded-xl flex items-center justify-center shrink-0">
+                                            <GraduationCap className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <span>{entry.subject} <span className="text-text-muted text-xs">({entry.exam})</span></span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm font-black text-success">
+                                        <div className="w-8 h-8 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
+                                            <Trophy className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-base">{entry.score} / {entry.maxScore} คะแนน</span>
+                                    </div>
+                                    {entry.university && (
+                                        <div className="flex items-center gap-3 text-sm font-medium text-text-muted">
+                                            <div className="w-8 h-8 bg-surface-dark rounded-xl flex items-center justify-center shrink-0">
+                                                <School className="w-4 h-4" />
+                                            </div>
+                                            <span className="line-clamp-1">{entry.university}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="px-8 py-4 bg-surface-dark text-[10px] font-black text-text-muted border-t border-border mt-auto uppercase tracking-widest flex justify-between items-center group-hover:bg-primary/5 transition-colors">
+                                <span>ปีการศึกษา {entry.year}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* Modal */}
+                <AnimatePresence>
+                    {showModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 bg-gray-900/60 backdrop-blur-md"
+                                onClick={() => setShowModal(false)}
+                            />
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] overflow-hidden border border-border"
+                            >
+                                <div className="p-8 border-b border-border/50 flex items-center justify-between bg-gradient-to-br from-white to-surface">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-text-primary mb-1">
+                                            {editingEntry ? 'แก้ไขผลงาน' : 'เพิ่มผลงานใหม่'}
+                                        </h2>
+                                        <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Hall of Fame Entry</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowModal(false)}
+                                        className="p-2 hover:bg-red-50 hover:text-red-500 text-text-muted rounded-2xl transition-all"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="p-8 space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            ชื่อ-นามสกุล นักเรียน
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={form.name}
+                                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                            className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                            placeholder="ระบุชื่อจริง-นามสกุล"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                วิชา
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.subject}
+                                                onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                placeholder="คณิตศาสตร์"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                สนามสอบ
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.exam}
+                                                onChange={(e) => setForm({ ...form, exam: e.target.value })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                placeholder="A-Level"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                คะแนนที่ได้
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={form.score}
+                                                onChange={(e) => setForm({ ...form, score: Number(e.target.value) })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                คะแนนเต็ม
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={form.maxScore}
+                                                onChange={(e) => setForm({ ...form, maxScore: Number(e.target.value) })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                มหาวิทยาลัย / คณะ
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.university}
+                                                onChange={(e) => setForm({ ...form, university: e.target.value })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                placeholder="Optional"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                ปีการศึกษา (พ.ศ.)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.year}
+                                                onChange={(e) => setForm({ ...form, year: e.target.value })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-8 bg-surface flex flex-col sm:flex-row gap-3 border-t border-border/50">
+                                    <button
+                                        onClick={() => setShowModal(false)}
+                                        className="flex-1 py-4 font-bold text-text-secondary hover:bg-white rounded-2xl transition-all border border-transparent hover:border-border active:scale-95"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="flex-1 py-4 bg-primary hover:bg-primary-dark text-text-primary font-black rounded-2xl transition-all shadow-lg shadow-primary/25 active:scale-95"
+                                    >
+                                        {editingEntry ? 'อัปเดตข้อมูล' : 'เพิ่มผลงาน'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </PageTransition>
     );
 }

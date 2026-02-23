@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Search, Menu, X, User, BookOpen, LogOut, Moon, Sun, Shield, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/ThemeProvider';
-import { courses } from '@/lib/data';
+import { useSiteData } from '@/components/SiteDataProvider';
 import Logo from '@/components/Logo';
 import { useCart } from '@/components/CartProvider';
 
@@ -19,8 +19,8 @@ export default function Navbar() {
     const pathname = usePathname();
     const { theme, toggleTheme } = useTheme();
     const { totalItems } = useCart();
-
-    // Mock login state
+    const { data } = useSiteData();
+    const { courses, settings } = data;
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -71,8 +71,8 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2.5 shrink-0">
-                        <Logo size={36} />
-                        <span className="font-bold text-lg hidden sm:block">อรรถปัญญา</span>
+                        <Logo size={36} src={settings.logo} />
+                        <span className="font-bold text-lg hidden sm:block">{settings.siteName}</span>
                     </Link>
 
                     {/* Desktop Navigation */}

@@ -1,227 +1,327 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, Star, ImageIcon } from 'lucide-react';
-import { tutors as initialTutors, type Tutor } from '@/lib/data';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Plus, Search, Filter, UserCheck,
+    MoreVertical, Edit2, Trash2, Mail,
+    Phone, Globe, Award, BookOpen, X,
+    Upload, Facebook, Instagram, Twitter
+} from 'lucide-react';
+import { useSiteData } from '@/components/SiteDataProvider';
+import { Tutor } from '@/types';
+import PageTransition from '@/components/PageTransition';
 
 export default function AdminTutorsPage() {
-    const [tutorList, setTutorList] = useState(initialTutors);
-    const [showModal, setShowModal] = useState(false);
-    const [editing, setEditing] = useState<Tutor | null>(null);
-    const [form, setForm] = useState({
-        name: '', title: '', bio: '', image: '', expertise: '',
-        experienceYears: '', studentsCount: '', rating: '',
+    const { data, updateTutors } = useSiteData();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTutor, setEditingTutor] = useState<Tutor | null>(null);
+    const [form, setForm] = useState<Omit<Tutor, 'id'>>({
+        name: '',
+        bio: '',
+        expertise: [],
+        education: [],
+        avatar: '',
+        links: { facebook: '', instagram: '', line: '' }
     });
 
-    const openAdd = () => {
-        setEditing(null);
-        setForm({ name: '', title: '', bio: '', image: '', expertise: '', experienceYears: '', studentsCount: '', rating: '' });
-        setShowModal(true);
-    };
+    const tutors = data.tutors || [];
 
-    const openEdit = (t: Tutor) => {
-        setEditing(t);
+    const handleEdit = (tutor: Tutor) => {
+        setEditingTutor(tutor);
         setForm({
-            name: t.name, title: t.title, bio: t.bio,
-            image: t.image || '',
-            expertise: t.expertise.join(', '),
-            experienceYears: t.experienceYears.toString(),
-            studentsCount: t.studentsCount.toString(),
-            rating: t.rating.toString(),
+            name: tutor.name,
+            bio: tutor.bio,
+            expertise: tutor.expertise,
+            education: tutor.education || [],
+            avatar: tutor.avatar || '',
+            links: tutor.links || { facebook: '', instagram: '', line: '' }
         });
-        setShowModal(true);
+        setIsModalOpen(true);
     };
 
     const handleSave = () => {
-        const data: Tutor = {
-            id: editing?.id || Date.now().toString(),
-            name: form.name,
-            title: form.title,
-            bio: form.bio,
-            image: form.image || undefined,
-            expertise: form.expertise.split(',').map(s => s.trim()).filter(Boolean),
-            experienceYears: Number(form.experienceYears) || 0,
-            studentsCount: Number(form.studentsCount) || 0,
-            rating: Number(form.rating) || 0,
-        };
-        if (editing) {
-            setTutorList(tutorList.map(t => t.id === editing.id ? data : t));
+        if (editingTutor) {
+            updateTutors(tutors.map(t => t.id === editingTutor.id ? { ...form, id: t.id } : t));
         } else {
-            setTutorList([...tutorList, data]);
+            const newTutor: Tutor = {
+                ...form,
+                id: Math.random().toString(36).substr(2, 9)
+            };
+            updateTutors([...tutors, newTutor]);
         }
-        setShowModal(false);
+        setIsModalOpen(false);
+        setEditingTutor(null);
+        resetForm();
     };
 
     const handleDelete = (id: string) => {
-        if (confirm('ต้องการลบอาจารย์ท่านนี้หรือไม่?')) {
-            setTutorList(tutorList.filter(t => t.id !== id));
+        if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลอาจารย์ท่านนี้?')) {
+            updateTutors(tutors.filter(t => t.id !== id));
         }
     };
 
+    const resetForm = () => {
+        setForm({
+            name: '', bio: '', expertise: [], education: [], avatar: '',
+            links: { facebook: '', instagram: '', line: '' }
+        });
+    };
+
     return (
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-text-primary">จัดการอาจารย์ผู้สอน</h1>
-                <button
-                    onClick={openAdd}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-text-primary font-medium text-sm rounded-xl transition-all"
-                >
-                    <Plus className="w-4 h-4" />
-                    เพิ่มอาจารย์
-                </button>
-            </div>
-
-            {/* Tutor Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {tutorList.map((tutor) => {
-                    const avatarUrl = tutor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name.replace('อ.', ''))}&size=200&background=FACC15&color=fff&bold=true`;
-                    return (
-                        <div key={tutor.id} className="bg-white rounded-2xl border border-border p-5 hover:shadow-card-hover transition-all">
-                            <div className="flex items-start gap-4 mb-4">
-                                <img
-                                    src={avatarUrl}
-                                    alt={tutor.name}
-                                    className="w-16 h-16 rounded-xl object-cover ring-2 ring-border"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-text-primary truncate">{tutor.name}</h3>
-                                    <p className="text-sm text-primary-dark">{tutor.title}</p>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <Star className="w-3.5 h-3.5 text-primary-dark fill-primary-dark" />
-                                        <span className="text-sm font-medium">{tutor.rating}</span>
-                                        <span className="text-xs text-text-muted ml-1">• {tutor.experienceYears} ปี</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-sm text-text-secondary line-clamp-2 mb-3">{tutor.bio}</p>
-                            <div className="flex flex-wrap gap-1 mb-4">
-                                {tutor.expertise.map(tag => (
-                                    <span key={tag} className="px-2 py-0.5 bg-surface text-text-muted text-xs rounded-full">{tag}</span>
-                                ))}
-                            </div>
-                            <div className="flex gap-2 pt-3 border-t border-border">
-                                <button
-                                    onClick={() => openEdit(tutor)}
-                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                                >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                    แก้ไข
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(tutor.id)}
-                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm text-danger hover:bg-red-50 rounded-lg transition-colors"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    ลบ
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} />
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="relative bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+        <PageTransition>
+            <div className="space-y-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black text-text-primary mb-2">จัดการอาจารย์ผู้สอน</h1>
+                        <p className="text-text-secondary text-sm font-medium">จัดการโปรไฟล์และประวัติการทำงานของอาจารย์ในสถาบัน</p>
+                    </div>
+                    <button
+                        onClick={() => { resetForm(); setIsModalOpen(true); }}
+                        className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-text-primary font-black text-sm rounded-2xl transition-all shadow-lg shadow-primary/20 active:scale-95"
                     >
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold text-text-primary">
-                                {editing ? 'แก้ไขอาจารย์' : 'เพิ่มอาจารย์ใหม่'}
-                            </h2>
-                            <button onClick={() => setShowModal(false)} className="text-text-muted hover:text-text-primary">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Image URL */}
-                            <div>
-                                <label className="block text-sm font-medium text-text-primary mb-1">รูปภาพอาจารย์ (URL)</label>
-                                <input
-                                    type="url"
-                                    value={form.image}
-                                    onChange={(e) => setForm({ ...form, image: e.target.value })}
-                                    placeholder="https://example.com/tutor-photo.jpg"
-                                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-                                />
-                                {form.image && (
-                                    <div className="mt-2 flex justify-center">
-                                        <img src={form.image} alt="Preview" className="w-20 h-20 rounded-xl object-cover border border-border"
-                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                    </div>
-                                )}
-                                {!form.image && (
-                                    <p className="text-xs text-text-muted mt-1 flex items-center gap-1">
-                                        <ImageIcon className="w-3.5 h-3.5" />
-                                        ถ้าไม่ใส่รูป จะสร้างจากชื่อแทน
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">ชื่อ</label>
-                                    <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">ตำแหน่ง</label>
-                                    <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-text-primary mb-1">ประวัติย่อ</label>
-                                <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={3}
-                                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-text-primary mb-1">ความเชี่ยวชาญ (คั่นด้วย ,)</label>
-                                <input type="text" value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })}
-                                    placeholder="แคลคูลัส, พีชคณิต, สถิติ"
-                                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">ปีประสบการณ์</label>
-                                    <input type="number" value={form.experienceYears} onChange={(e) => setForm({ ...form, experienceYears: e.target.value })}
-                                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">จำนวนนักเรียน</label>
-                                    <input type="number" value={form.studentsCount} onChange={(e) => setForm({ ...form, studentsCount: e.target.value })}
-                                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-primary mb-1">คะแนน</label>
-                                    <input type="number" step="0.1" value={form.rating} onChange={(e) => setForm({ ...form, rating: e.target.value })}
-                                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowModal(false)}
-                                className="flex-1 py-2.5 border border-border text-text-secondary rounded-xl hover:bg-surface-dark transition-colors text-sm">
-                                ยกเลิก
-                            </button>
-                            <button onClick={handleSave}
-                                className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-text-primary font-medium rounded-xl transition-all text-sm">
-                                {editing ? 'บันทึก' : 'เพิ่มอาจารย์'}
-                            </button>
-                        </div>
-                    </motion.div>
+                        <Plus className="w-5 h-5" />
+                        เพิ่มอาจารย์ใหม่
+                    </button>
                 </div>
-            )}
-        </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {tutors.map((tutor, i) => (
+                        <motion.div
+                            key={tutor.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="bg-white rounded-[32px] border border-border overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-primary/5 transition-all duration-500"
+                        >
+                            <div className="h-28 bg-surface-dark group-hover:bg-primary/10 transition-colors duration-500" />
+                            <div className="px-8 pb-8 -mt-14 flex-1 flex flex-col">
+                                <div className="relative mb-6">
+                                    <div className="w-28 h-28 rounded-3xl bg-white p-1.5 border border-border shadow-sm group-hover:scale-105 transition-transform duration-500">
+                                        <div className="w-full h-full rounded-2xl bg-surface-dark overflow-hidden flex items-center justify-center border border-border">
+                                            {tutor.avatar ? (
+                                                <img src={tutor.avatar} alt={tutor.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <UserCheck className="w-12 h-12 text-text-muted/40" />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="absolute top-16 right-0 flex gap-2">
+                                        <button
+                                            onClick={() => handleEdit(tutor)}
+                                            className="p-3 bg-white border border-border rounded-2xl text-text-secondary hover:text-primary-dark hover:border-primary/40 shadow-sm hover:shadow-md transition-all active:scale-90"
+                                        >
+                                            <Edit2 className="w-4.5 h-4.5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(tutor.id)}
+                                            className="p-3 bg-white border border-border rounded-2xl text-text-secondary hover:text-danger hover:border-danger/40 shadow-sm hover:shadow-md transition-all active:scale-90"
+                                        >
+                                            <Trash2 className="w-4.5 h-4.5" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1">
+                                    <h3 className="text-xl font-black text-text-primary mb-2 group-hover:text-primary-dark transition-colors">{tutor.name}</h3>
+                                    <div className="flex flex-wrap gap-1.5 mb-4">
+                                        {tutor.expertise.map(exp => (
+                                            <span key={exp} className="px-3 py-1 bg-surface-dark text-text-muted text-[10px] font-black rounded-full uppercase tracking-wider group-hover:bg-primary/10 group-hover:text-primary-dark transition-colors">
+                                                {exp}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <p className="text-sm text-text-secondary line-clamp-3 mb-6 font-medium leading-relaxed">
+                                        {tutor.bio}
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center gap-4 pt-6 border-t border-border mt-auto">
+                                    <div className="flex gap-2">
+                                        {tutor.links?.facebook && <div className="w-8 h-8 rounded-xl bg-surface-dark flex items-center justify-center text-text-muted hover:bg-blue-50 hover:text-blue-600 transition-colors"><Facebook className="w-4 h-4" /></div>}
+                                        {tutor.links?.instagram && <div className="w-8 h-8 rounded-xl bg-surface-dark flex items-center justify-center text-text-muted hover:bg-pink-50 hover:text-pink-600 transition-colors"><Instagram className="w-4 h-4" /></div>}
+                                    </div>
+                                    <span className="text-[10px] font-black text-text-muted ml-auto uppercase tracking-widest">
+                                        ID: {tutor.id.slice(0, 8)}
+                                    </span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+
+                    {tutors.length === 0 && (
+                        <div className="md:col-span-2 lg:col-span-3 text-center py-32 bg-white border border-border rounded-[40px] shadow-sm">
+                            <div className="w-20 h-20 bg-surface-dark rounded-[32px] flex items-center justify-center mx-auto mb-6">
+                                <UserCheck className="w-10 h-10 text-text-muted/30" />
+                            </div>
+                            <h3 className="text-2xl font-black text-text-primary mb-2">ยังไม่มีข้อมูลอาจารย์</h3>
+                            <p className="text-text-secondary text-sm mb-10 max-w-sm mx-auto">เริ่มสร้างรายชื่ออาจารย์ผู้สอนเพื่อเพิ่มความน่าเชื่อถือให้กับสถาบัน</p>
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="bg-primary hover:bg-primary-dark px-10 py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all active:scale-95"
+                            >
+                                เพิ่มอาจารย์ท่านแรก
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Modal */}
+                <AnimatePresence>
+                    {isModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 bg-gray-900/60 backdrop-blur-md"
+                                onClick={() => setIsModalOpen(false)}
+                            />
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                className="relative bg-white rounded-[2.5rem] w-full max-w-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] overflow-hidden border border-border my-8"
+                            >
+                                <div className="p-8 border-b border-border/50 flex items-center justify-between bg-gradient-to-br from-white to-surface">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-text-primary mb-1">
+                                            {editingTutor ? 'แก้ไขข้อมูลอาจารย์' : 'เพิ่มอาจารย์ใหม่'}
+                                        </h2>
+                                        <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Tutor Profile Configuration</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="p-2 hover:bg-red-50 hover:text-red-500 text-text-muted rounded-2xl transition-all"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Avatar Upload Simulation */}
+                                        <div className="md:col-span-2 flex items-center gap-6 p-6 bg-surface rounded-3xl border border-border">
+                                            <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-border flex items-center justify-center overflow-hidden shrink-0">
+                                                {form.avatar ? (
+                                                    <img src={form.avatar} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Upload className="w-8 h-8 text-text-muted opacity-20" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 space-y-3">
+                                                <label className="text-sm font-bold text-text-primary flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                    รูปภาพโปรไฟล์ (URL)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="https://..."
+                                                    value={form.avatar}
+                                                    onChange={e => setForm({ ...form, avatar: e.target.value })}
+                                                    className="w-full px-5 py-3 bg-white border border-border rounded-xl text-xs focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                ชื่อ-นามสกุล
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.name}
+                                                onChange={e => setForm({ ...form, name: e.target.value })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                placeholder="ชื่ออาจารย์..."
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                ความเชี่ยวชาญ (คั่นด้วยคอมม่า)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.expertise.join(', ')}
+                                                onChange={e => setForm({ ...form, expertise: e.target.value.split(',').map(s => s.trim()) })}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                placeholder="ฟิสิกส์, คณิตศาสตร์, ..."
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                ประวัติย่อ
+                                            </label>
+                                            <textarea
+                                                value={form.bio}
+                                                onChange={e => setForm({ ...form, bio: e.target.value })}
+                                                rows={3}
+                                                className="w-full px-5 py-3.5 bg-surface border border-border rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none font-medium leading-relaxed"
+                                                placeholder="ประวัติและประสบการณ์การสอน..."
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                Facebook
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={form.links?.facebook}
+                                                    onChange={e => setForm({ ...form, links: { ...form.links!, facebook: e.target.value } })}
+                                                    className="w-full pl-12 pr-5 py-3.5 bg-surface dark:bg-gray-900/50 border border-border dark:border-gray-700 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                    placeholder="facebook.com/..."
+                                                />
+                                                <Facebook className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-text-primary mb-2 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                Instagram
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={form.links?.instagram}
+                                                    onChange={e => setForm({ ...form, links: { ...form.links!, instagram: e.target.value } })}
+                                                    className="w-full pl-12 pr-5 py-3.5 bg-surface dark:bg-gray-900/50 border border-border dark:border-gray-700 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                                                    placeholder="instagram.com/..."
+                                                />
+                                                <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-8 bg-surface flex flex-col sm:flex-row gap-3 border-t border-border/50 child-button-flex-1">
+                                    <button
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="flex-1 py-4 font-bold text-text-secondary hover:bg-white rounded-2xl transition-all border border-transparent hover:border-border active:scale-95"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="flex-1 py-4 bg-primary hover:bg-primary-dark text-text-primary font-black rounded-2xl transition-all shadow-lg shadow-primary/25 active:scale-95"
+                                    >
+                                        บันทึกข้อมูลอาจารย์
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </PageTransition>
     );
 }

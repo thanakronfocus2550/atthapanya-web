@@ -5,13 +5,16 @@ import { Search, SlidersHorizontal, X } from 'lucide-react';
 import CourseCard from '@/components/CourseCard';
 import PageTransition from '@/components/PageTransition';
 import ScrollReveal from '@/components/ScrollReveal';
-import { courses } from '@/lib/data';
+import { useSiteData } from '@/components/SiteDataProvider';
 import type { CourseCategory, Subject } from '@/types';
 
 const categoryFilters: CourseCategory[] = ['A-Level', 'TGAT', 'ม.ต้น', 'ม.ปลาย'];
 const subjectFilters: Subject[] = ['คณิตศาสตร์', 'ฟิสิกส์', 'เคมี', 'ชีววิทยา', 'ภาษาอังกฤษ', 'ภาษาไทย'];
 
 export default function CoursesPage() {
+    const { data } = useSiteData();
+    const { courses = [] } = data;
+
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<CourseCategory | null>(null);
     const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -58,8 +61,8 @@ export default function CoursesPage() {
                             key={cat}
                             onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
                             className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all ${selectedCategory === cat
-                                    ? 'bg-primary/15 text-primary-dark font-medium'
-                                    : 'text-text-secondary hover:bg-surface-dark'
+                                ? 'bg-primary/15 text-primary-dark font-medium'
+                                : 'text-text-secondary hover:bg-surface-dark'
                                 }`}
                         >
                             {cat}
@@ -77,8 +80,8 @@ export default function CoursesPage() {
                             key={sub}
                             onClick={() => setSelectedSubject(selectedSubject === sub ? null : sub)}
                             className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all ${selectedSubject === sub
-                                    ? 'bg-primary/15 text-primary-dark font-medium'
-                                    : 'text-text-secondary hover:bg-surface-dark'
+                                ? 'bg-primary/15 text-primary-dark font-medium'
+                                : 'text-text-secondary hover:bg-surface-dark'
                                 }`}
                         >
                             {sub}

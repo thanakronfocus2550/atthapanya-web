@@ -1,4 +1,19 @@
-export default function Logo({ size = 36 }: { size?: number }) {
+export default function Logo({ size = 36, src }: { size?: number, src?: string }) {
+    if (src) {
+        return (
+            <img
+                src={src}
+                alt="Logo"
+                width={size}
+                height={size}
+                className="rounded-lg object-contain"
+                onError={(e) => {
+                    // Fallback to SVG if image fails to load
+                    (e.target as HTMLImageElement).style.display = 'none';
+                }}
+            />
+        );
+    }
     return (
         <svg
             width={size}
@@ -29,8 +44,8 @@ export default function Logo({ size = 36 }: { size?: number }) {
             />
             <defs>
                 <linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#FACC15" />
-                    <stop offset="1" stopColor="#D97706" />
+                    <stop stopColor="var(--primary-color, #FACC15)" />
+                    <stop offset="1" stopColor="var(--primary-color-dark, #D97706)" />
                 </linearGradient>
             </defs>
         </svg>

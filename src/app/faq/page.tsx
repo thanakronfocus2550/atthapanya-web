@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, HelpCircle, BookOpen, CreditCard, Monitor, Clock, Users, Shield } from 'lucide-react';
 import PageTransition from '@/components/PageTransition';
 import ScrollReveal from '@/components/ScrollReveal';
+import { useSiteData } from '@/components/SiteDataProvider';
 
 const faqCategories = [
     { id: 'all', label: 'ทั้งหมด', icon: HelpCircle },
@@ -94,8 +95,10 @@ const faqs = [
 ];
 
 export default function FAQPage() {
+    const { data } = useSiteData();
+    const { faqs, settings } = data;
     const [activeCategory, setActiveCategory] = useState('all');
-    const [openId, setOpenId] = useState<number | null>(null);
+    const [openId, setOpenId] = useState<string | null>(null);
 
     const filtered = activeCategory === 'all' ? faqs : faqs.filter(f => f.category === activeCategory);
 
@@ -191,8 +194,8 @@ export default function FAQPage() {
                                 <a href="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-text-primary font-semibold rounded-xl transition-all text-sm">
                                     ติดต่อเรา
                                 </a>
-                                <a href="https://line.me/" target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all text-sm">
-                                    LINE @attapanya
+                                <a href={`https://line.me/R/ti/p/@${settings.phone}`} target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all text-sm">
+                                    LINE {settings.phone}
                                 </a>
                             </div>
                         </div>

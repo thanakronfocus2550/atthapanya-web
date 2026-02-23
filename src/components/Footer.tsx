@@ -2,11 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Phone, Mail, MapPin, Facebook, MessageCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, MessageCircle, Instagram } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { useSiteData } from '@/components/SiteDataProvider';
 
 export default function Footer() {
     const pathname = usePathname();
+    const { data } = useSiteData();
+    const { settings } = data;
 
     // Don't render on admin pages
     if (pathname.startsWith('/admin')) return null;
@@ -18,8 +21,8 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="md:col-span-1">
                         <div className="flex items-center gap-2.5 mb-4">
-                            <Logo size={36} />
-                            <span className="font-bold text-lg">อรรถปัญญา</span>
+                            <Logo size={36} src={settings.logo} />
+                            <span className="font-bold text-lg">{settings.siteName}</span>
                         </div>
                         <p className="text-sm text-gray-400 leading-relaxed mb-4">
                             สถาบันกวดวิชาชั้นนำ มุ่งเน้นพัฒนาศักยภาพผู้เรียน
@@ -27,13 +30,22 @@ export default function Footer() {
                         </p>
                         {/* Social Icons */}
                         <div className="flex gap-2">
-                            <a href="#" className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
-                                <Facebook className="w-4 h-4 text-gray-400" />
-                            </a>
-                            <a href="#" className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
-                                <MessageCircle className="w-4 h-4 text-gray-400" />
-                            </a>
-                            <a href="mailto:info@attapanya.com" className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                            {settings.facebookUrl && (
+                                <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                                    <Facebook className="w-4 h-4 text-gray-400" />
+                                </a>
+                            )}
+                            {settings.lineId && (
+                                <a href={`https://line.me/ti/p/~${settings.lineId}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                                    <MessageCircle className="w-4 h-4 text-gray-400" />
+                                </a>
+                            )}
+                            {settings.instagramUrl && (
+                                <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                                    <Instagram className="w-4 h-4 text-gray-400" />
+                                </a>
+                            )}
+                            <a href={`mailto:${settings.email}`} className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-primary/20 flex items-center justify-center transition-colors">
                                 <Mail className="w-4 h-4 text-gray-400" />
                             </a>
                         </div>
@@ -68,11 +80,11 @@ export default function Footer() {
                         <ul className="space-y-3 text-sm text-gray-400">
                             <li className="flex items-center gap-2">
                                 <Phone className="w-4 h-4 text-primary shrink-0" />
-                                02-123-4567
+                                {settings.phone}
                             </li>
                             <li className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-primary shrink-0" />
-                                info@attapanya.com
+                                {settings.email}
                             </li>
                             <li className="flex items-start gap-2">
                                 <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -83,7 +95,7 @@ export default function Footer() {
                 </div>
 
                 <div className="mt-10 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
-                    © {new Date().getFullYear()} สถาบันกวดวิชาอรรถปัญญา สงวนลิขสิทธิ์
+                    © {new Date().getFullYear()} {settings.siteName} สงวนลิขสิทธิ์
                 </div>
             </div>
         </footer>
